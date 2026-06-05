@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Domain Volume Master</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<div class="header">
+  <img src="icons/icon32.png">
+  <span>Volume Control</span>
+</div>
+<body>
+
+    <div class="card">
+        <div class="title">
+            Master volume
+        </div>
+
+        <input
+            id="masterSlider"
+            type="range"
+            min="0"
+            max="100"
+        >
+
+        <div id="masterValue">
+            100%
+        </div>
+    </div>
+
+    <div id="domains"></div>
+	
+    <script src="tldts.min.js"></script>
+    <script src="popup.js"></script>
+
+</body>
+</html>

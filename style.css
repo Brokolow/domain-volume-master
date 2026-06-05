@@ -1,0 +1,56 @@
+body {
+    width: 320px;
+    padding: 12px;
+    margin: 0;
+
+    background: #1f1f1f;
+    color: white;
+
+    font-family: Arial, sans-serif;
+}
+
+.card {
+    background: #2c2c2c;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+.title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.domain-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.favicon {
+    width: 18px;
+    height: 18px;
+}
+
+input[type="range"] {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.percent {
+    margin-top: 6px;
+    font-size: 12px;
+    opacity: .8;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.header img {
+  width: 20px;
+}
