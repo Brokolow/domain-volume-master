@@ -7,7 +7,6 @@ A simple and lightweight Chrome extension to control audio volume globally and p
 - Master volume control across all sites
 - Per-site volume customization
 - Instant updates across open tabs
-- Works with popular platforms (YouTube, Facebook, Dailymotion, etc.)
 - Clean and minimal interface
 
 ## How it works
