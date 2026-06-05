@@ -270,6 +270,18 @@
 					return;
 				}
 
+				if (
+					Math.abs(
+						media.volume -
+						Number(
+							media.dataset.dvUserVolume
+						) *
+						domainMultiplier
+					) < 0.001
+				) {
+					return;
+				}
+
 				media.dataset.dvUserVolume =
 					String(media.volume);
 

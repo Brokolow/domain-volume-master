@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Domain Volume",
-  "version": "2.1.0",
-  "description": "Volume global et volume personnalisé par domaine",
+  "name": "Domain Volume Master",
+  "version": "1.1.1",
+  "description": "Control volume per site",
 
   "minimum_chrome_version": "114",
 
