@@ -1,52 +1,52 @@
 {
-  "manifest_version": 3,
-  "name": "Domain Volume Master",
-  "version": "1.1.1",
-  "description": "Control volume per site",
+    "manifest_version": 3,
+    "name": "Volume Per Site",
+    "version": "1.1.2",
+    "description": "Set a different volume level for each website and never adjust audio manually again.",
 
-  "minimum_chrome_version": "114",
+    "minimum_chrome_version": "114",
 
-  "permissions": [
-    "storage",
-    "tabs"
-  ],
+    "permissions": [
+        "storage",
+        "tabs"
+    ],
 
-  "host_permissions": [
-    "<all_urls>"
-  ],
-
-  "action": {
-    "default_popup": "popup.html"
-  },
-
-  "content_scripts": [
-    {
-      "matches": [
+    "host_permissions": [
         "<all_urls>"
-      ],
-      "js": [
-        "tldts.min.js",
-        "content.js"
-      ],
-      "run_at": "document_start",
-      "all_frames": true
-    }
-  ],
+    ],
 
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "page-hook.js"
-      ],
-      "matches": [
-        "<all_urls>"
-      ]
-    }
-  ],
+    "action": {
+        "default_popup": "popup.html"
+    },
 
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  }
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "tldts.min.js",
+                "content.js"
+            ],
+            "run_at": "document_start",
+            "all_frames": true
+        }
+    ],
+
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "page-hook.js"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
+    ],
+
+    "icons": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+    }
 }

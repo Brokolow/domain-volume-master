@@ -160,9 +160,23 @@ function updateUI() {
 }
 
 function buildDomains(tabs) {
+
+    const activeTab = tabs.find(
+        tab => tab.active
+    );
+
+    const orderedTabs = activeTab
+        ? [
+            activeTab,
+            ...tabs.filter(
+                tab => !tab.active
+            )
+        ]
+        : tabs;
+
     const handledDomains = new Map();
 
-    tabs.forEach(tab => {
+    orderedTabs.forEach(tab => {
         if (!tab.url) {
             return;
         }
