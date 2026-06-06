@@ -1,5 +1,5 @@
-(() => {
-"use strict";
+﻿(() => {
+    "use strict";
 
 if (window.__DOMAIN_VOLUME_HOOK_INSTALLED__) {
     return;
@@ -9,34 +9,27 @@ window.__DOMAIN_VOLUME_HOOK_INSTALLED__ = true;
 
 let multiplier =
     Number(
-        document.documentElement
-            ?.dataset
-            ?.domainVolume
+        document.documentElement?.dataset?.domainVolume
     ) || 1;
 
 const contexts = new Set();
+const mediaElements = new Set();
 
 function updateAllContexts() {
-
-    for (const ctxInfo of contexts) {
+    for (const { gain } of contexts) {
         try {
-            ctxInfo.gain.gain.value =
-                multiplier;
-        } catch (err) {
-            console.warn(
-                "[DomainVolume] gain update failed",
-                err
-            );
-        }
+            gain.gain.value = multiplier;
+        } catch (_) {}
     }
 }
 
 window.addEventListener(
     "DomainVolumeUpdate",
-    (event) => {
-        const value = Number(
-            event.detail?.volume
-        );
+    event => {
+        const value =
+            Number(
+                event.detail?.volume
+            );
 
         multiplier =
             Number.isFinite(value) &&
@@ -48,24 +41,18 @@ window.addEventListener(
             String(multiplier);
 
         updateAllContexts();
+        updateAllMedia();
     }
 );
-
-const OriginalAudioContext =
-    window.AudioContext;
 
 function patchAudioContext(
     AudioContextClass
 ) {
     if (!AudioContextClass) {
-        console.warn(
-            "[DomainVolume] AudioContext unavailable"
-        );
-
         return AudioContextClass;
     }
 
-    return class PatchedAudioContext extends AudioContextClass {
+    return class extends AudioContextClass {
         constructor(...args) {
             super(...args);
 
@@ -88,34 +75,31 @@ function patchAudioContext(
                 const originalDestination =
                     this.destination;
 
-                const originalConnect =
-                    AudioNode.prototype.connect;
-
                 if (
                     !window.__DOMAIN_VOLUME_CONNECT_PATCHED__
                 ) {
                     window.__DOMAIN_VOLUME_CONNECT_PATCHED__ =
                         true;
 
+                    const originalConnect =
+                        AudioNode.prototype.connect;
+
                     AudioNode.prototype.connect =
-                        function (
-                            ...connectArgs
-                        ) {
+                        function (...args) {
                             try {
                                 if (
-                                    connectArgs[0] &&
-                                    connectArgs[0]
-                                        .__domainVolumeDestination
+                                    args[0]
+                                        ?.__domainVolumeDestination
                                 ) {
-                                    connectArgs[0] =
-                                        connectArgs[0]
+                                    args[0] =
+                                        args[0]
                                             .__realDestination;
                                 }
                             } catch (_) {}
 
                             return originalConnect.apply(
                                 this,
-                                connectArgs
+                                args
                             );
                         };
                 }
@@ -124,13 +108,13 @@ function patchAudioContext(
                     originalDestination
                 );
 
-                const proxyDestination = {
-                    __domainVolumeDestination:
-                        true,
-
-                    __realDestination:
-                        gain
-                };
+                const proxyDestination =
+                    {
+                        __domainVolumeDestination:
+                            true,
+                        __realDestination:
+                            gain
+                    };
 
                 Object.setPrototypeOf(
                     proxyDestination,
@@ -141,40 +125,34 @@ function patchAudioContext(
                     this,
                     "destination",
                     {
-                        configurable: true,
-                        enumerable: true,
-
+                        configurable:
+                            true,
+                        enumerable:
+                            true,
                         get() {
                             return proxyDestination;
                         }
                     }
                 );
 
-                contexts.add({
+                const ctxInfo = {
                     context: this,
                     gain
-                });
+                };
+
+                contexts.add(
+                    ctxInfo
+                );
 
                 const cleanup =
-                    () => {
-                        for (const item of contexts) {
-                            if (
-                                item.context ===
-                                this
-                            ) {
-                                contexts.delete(
-                                    item
-                                );
-
-                                break;
-                            }
-                        }
-                    };
+                    () =>
+                        contexts.delete(
+                            ctxInfo
+                        );
 
                 this.addEventListener?.(
                     "statechange",
                     () => {
-
                         if (
                             this.state ===
                             "closed"
@@ -185,7 +163,9 @@ function patchAudioContext(
                 );
 
                 const originalClose =
-                    this.close?.bind(this);
+                    this.close?.bind(
+                        this
+                    );
 
                 if (
                     originalClose
@@ -213,9 +193,248 @@ function patchAudioContext(
 
 window.AudioContext =
     patchAudioContext(
-        OriginalAudioContext
+        window.AudioContext
     );
 
 updateAllContexts();
+
+const originalCreateMediaElementSource =
+    AudioContext.prototype.createMediaElementSource;
+
+AudioContext.prototype.createMediaElementSource =
+    function (
+        mediaElement
+    ) {
+        mediaElement.__dvUsesWebAudio =
+            true;
+
+        return originalCreateMediaElementSource.call(
+            this,
+            mediaElement
+        );
+    };
+
+if (
+    window.webkitAudioContext
+) {
+    const originalWK =
+        webkitAudioContext.prototype.createMediaElementSource;
+
+    webkitAudioContext.prototype.createMediaElementSource =
+        function (
+            mediaElement
+        ) {
+            mediaElement.__dvUsesWebAudio =
+                true;
+
+            return originalWK.call(
+                this,
+                mediaElement
+            );
+        };
+}
+
+function shouldUseHtmlMediaVolume(
+    media
+) {
+    return (
+        media instanceof
+            HTMLMediaElement &&
+        !media.__dvUsesWebAudio
+    );
+}
+
+function applyMediaVolume(
+    media
+) {
+    try {
+        if (
+            !shouldUseHtmlMediaVolume(
+                media
+            )
+        ) {
+            return;
+        }
+
+        const userVolume =
+            Number(
+                media.__dvUserVolume ??
+                    media.volume
+            );
+
+        media.__dvApplying =
+            true;
+
+        media.volume =
+            Math.max(
+                0,
+                Math.min(
+                    1,
+                    userVolume *
+                        multiplier
+                )
+            );
+
+        queueMicrotask(
+            () => {
+                media.__dvApplying =
+                    false;
+            }
+        );
+    } catch (_) {}
+}
+
+function registerMedia(
+    media
+) {
+    if (
+        !media ||
+        media.__dvRegistered
+    ) {
+        return;
+    }
+
+    media.__dvRegistered =
+        true;
+
+    media.__dvUserVolume =
+        media.volume;
+
+    mediaElements.add(
+        media
+    );
+
+    media.addEventListener(
+        "volumechange",
+        () => {
+            if (
+                !shouldUseHtmlMediaVolume(
+                    media
+                )
+            ) {
+                return;
+            }
+
+            const expected =
+                Math.max(
+                    0,
+                    Math.min(
+                        1,
+                        media.__dvUserVolume *
+                            multiplier
+                    )
+                );
+
+            if (
+                Math.abs(
+                    media.volume -
+                        expected
+                ) < 0.001
+            ) {
+                return;
+            }
+
+            media.__dvUserVolume =
+                media.volume;
+
+            applyMediaVolume(
+                media
+            );
+        }
+    );
+
+    applyMediaVolume(
+        media
+    );
+}
+
+function updateAllMedia() {
+    for (const media of mediaElements) {
+        applyMediaVolume(
+            media
+        );
+    }
+}
+
+const OriginalAudio =
+    window.Audio;
+
+window.Audio =
+    function (...args) {
+        const audio =
+            new OriginalAudio(
+                ...args
+            );
+
+        registerMedia(
+            audio
+        );
+
+        return audio;
+    };
+
+window.Audio.prototype =
+    OriginalAudio.prototype;
+
+Object.setPrototypeOf(
+    window.Audio,
+    OriginalAudio
+);
+
+const originalCreateElement =
+    Document.prototype.createElement;
+
+Document.prototype.createElement =
+    function (...args) {
+        const element =
+            originalCreateElement.apply(
+                this,
+                args
+            );
+
+        const tag =
+            String(
+                args[0] || ""
+            ).toLowerCase();
+
+        if (
+            tag ===
+                "audio" ||
+            tag ===
+                "video"
+        ) {
+            registerMedia(
+                element
+            );
+        }
+
+        return element;
+    };
+
+new MutationObserver(
+    () => {
+        document
+            .querySelectorAll(
+                "audio,video"
+            )
+            .forEach(
+                registerMedia
+            );
+    }
+).observe(
+    document.documentElement,
+    {
+        childList: true,
+        subtree: true
+    }
+);
+
+document
+    .querySelectorAll(
+        "audio,video"
+    )
+    .forEach(
+        registerMedia
+    );
 
 })();
