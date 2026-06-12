@@ -22,9 +22,7 @@
 
     async function getRootDomain() {
         try {
-            if (window === window.top) {
-                return getDomain(location.hostname);
-            }
+            if (window === window.top) return getDomain(location.hostname);
 
             return new Promise(resolve => {
                 const timeout = setTimeout(() => resolve(getDomain(location.hostname)), 500);
@@ -83,9 +81,7 @@
     }
 
     chrome.storage.onChanged.addListener((changes, area) => {
-        if (area === "local" && changes.settings) {
-            loadSettings();
-        }
+        if (area === "local" && changes.settings) loadSettings();
     });
 
     loadSettings();

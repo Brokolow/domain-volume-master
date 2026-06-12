@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Volume Per Site",
-    "version": "1.1.2",
+    "version": "1.1.3",
     "description": "Set a different volume level for each website and never adjust audio manually again.",
 
     "minimum_chrome_version": "114",
